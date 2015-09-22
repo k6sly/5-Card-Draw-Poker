@@ -7,16 +7,34 @@ import random
 cards = ["As", "Ac", "Ah", "Ad","Ks", "Kc", "Kh", "Kd","Qs", "Qc", "Qh", "Qd","Js", "Jc", "Jh", "Jd","10s", "10c", "10h", "10d",
          "9s", "9c", "9h", "9d","8s", "8c", "8h", "8d","7s", "7c", "7h", "7d","6s", "6c", "6h", "6d","5s", "5c", "5h", "5d","4s",
          "4c", "4h", "4d","3s", "3c", "3h", "3d","2s", "2c", "2h", "2d"]
+wcards = []
 hands = ["high card", "pair", "two pair", "three of a kind", "strait", "flush", "full house", "four of a kind", "strait flush", "royal flush"]
 facecard = {"A": 14, "K": 13, "Q": 12, "J": 11}
 cardface = {14: "A", 13: "K", 12: "Q", 11: "J"}
-
 players = []
 player0 = []
 player1 = []
 player2 = []
 player3 = []
 player4 = []
+hand0 = []
+hand1 = []
+hand2 = []
+hand3 = []
+hand4 = []
+
+def initialize():
+    del wcards[:]    
+    del player0[:]
+    del player1[:]
+    del player2[:]
+    del player3[:]
+    del player4[:]
+    del hand0[:]
+    del hand1[:]
+    del hand2[:]
+    del hand3[:]
+    del hand4[:]
 
 def player_name(x):
     player = raw_input("What is player %s's name? " % str(x+1) )
@@ -38,17 +56,18 @@ def pick_players():
         print "Please try again"
         start()
 
-##def playagain():
-##    print
-##    replay = raw_input("Do you want to play again Y/N")
-##    if replay in ("Y", "y", "YES", "Yes"):
-##        sameplayers = raw_input("Same Players Y/N")
-##        if sameplayers in ("Y", "y", "YES", "Yes"):
-##            game()
-##        else:
-##            start()
-##    else:
-##        pass
+def playagain():
+    print
+    replay = raw_input("Do you want to play again Y/N? ")
+    if replay in ("Y", "y", "YES", "Yes"):
+        sameplayers = raw_input("Same Players Y/N? ")
+        if sameplayers in ("Y", "y", "YES", "Yes"):
+            initialize()
+            game()
+        else:
+            start()
+    else:
+        pass
 
 
 def ranks(hand):
@@ -67,10 +86,10 @@ def ranks(hand):
     numPair = []
     
 ##-------------- Uncomment for testing ---------------    
-##    test = ["As","10s","Js","Qs","Ks"]
-##    for x in test:
+    test = ["As","Ac","Ad","Ah","Jd"]
+    for x in test:
 ##----------------------------------------------------        
-    for x in hand:
+##    for x in hand:
         card = x
         if len(card) == 3:
             cardN = card[0:2]
@@ -122,15 +141,23 @@ def ranks(hand):
 
         if numPair[r+1] == numPair[r]:
             likecards += 1
-            if likecards == 3:
-                three = str(numPair[r])
-                pair2 = numPair[4]
-                likecards = 5
-                break
             if pair1 == 0:
                 pair1 = numPair[r]
+                likecards = 1
+            elif numPair[r+1] == pair1:
+                three = numPair[r]
             else:
                 pair2 = numPair[r]
+                likecards = 1
+
+        if numPair[r] == numPair[r-1] and numPair[r] == numPair[r-2]:
+            three = numPair[r]
+
+        if r == 3 and pair1 > 0 and pair2 > 0:
+            if numPair[4] == pair1 or numPair[4] == pair2:
+                if three == 0:
+                    three = numPair[4]
+                likecards = 5
                 
     if strait == 4:
         if numPair[4] - numPair[3] == 1:
@@ -144,20 +171,25 @@ def ranks(hand):
 
     if pair1 > 10:
         pair1 = cardface[pair1]
-    else:
+    elif pair1 != 0:
         pair1 = str(pair1)
         
     if pair2 > 10:
         pair2 = cardface[pair2]
     else:
         pair2 = str(pair2)
+
+    if three > 10:
+        three = cardface[three]
+    else:
+        three = str(three)
             
 
     if flush == 1 and strait == 5 and count == 60:
         outcome = '*** Royal Flush  ***({})'.format(suit)
     elif flush == 1 and strait == 5:
         outcome = 'Strait Flush to the {}'.format(numPair[4])
-    elif pair1 == pair2 and likecards == 4:
+    elif pair1 == pair2:
         outcome = 'Four of a kind ({}\'s)'.format(pair1)
     elif likecards == 5:
         if three == pair1:
@@ -168,13 +200,13 @@ def ranks(hand):
         outcome = 'Flush ({})'.format(suit)
     elif strait == 5:
         outcome = 'Strait to the {}'.format(numPair[4])
-    elif likecards == 3:
-        outcome = 'Three of a kind ({}\'s)'.format(pair1)
-    elif likecards == 4 and pair1 != pair2:
+    elif three != '0':
+        outcome = 'Three of a kind ({}\'s)'.format(three)
+    elif pair1 != '0' and pair2 != '0' and pair1 != pair2:
         outcome = 'Two pair ({}\'s and {}\'s)'.format(pair1, pair2)
-    elif likecards == 2 and pair1 != '0':
+    elif pair1 != '0':
         outcome = 'One pair ({}\'s)'.format(pair1)
-    elif likecards < 2:
+    elif pair1 == 0:
         outcome = 'High Card ({})' .format(numPair[4])
     else:
         outcome = 'An Error has occurred'
@@ -183,25 +215,26 @@ def ranks(hand):
 
 def game():
     n = len(players)
+    wcards = cards[:]
     for x in range(0,5):
         if n == 5:
-            player0.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player1.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player2.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player3.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player4.append(cards.pop(random.randint(0, len(cards) - 1)))
+            player0.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player1.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player2.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player3.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player4.append(wcards.pop(random.randint(0, len(wcards) - 1)))
         elif n == 4:
-            player0.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player1.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player2.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player3.append(cards.pop(random.randint(0, len(cards) - 1)))
+            player0.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player1.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player2.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player3.append(wcards.pop(random.randint(0, len(wcards) - 1)))
         elif n == 3:
-            player0.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player1.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player2.append(cards.pop(random.randint(0, len(cards) - 1)))
+            player0.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player1.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player2.append(wcards.pop(random.randint(0, len(wcards) - 1)))
         elif n == 2:
-            player0.append(cards.pop(random.randint(0, len(cards) - 1)))
-            player1.append(cards.pop(random.randint(0, len(cards) - 1)))
+            player0.append(wcards.pop(random.randint(0, len(wcards) - 1)))
+            player1.append(wcards.pop(random.randint(0, len(wcards) - 1)))
         
     hand0 = ranks(player0)
     myHand = player0[0] + " " + player0[1] + " " + player0[2] + " " + player0[3] + " " + player0[4]
@@ -230,8 +263,9 @@ def game():
         myHand = player4[0] + " " + player4[1] + " " + player4[2] + " " + player4[3] + " " + player4[4]
         print "%s\'s hand is:" % (players[4])
         print "       " + (myHand) + ",  " + (hand4)
-
-##    playagain()
+    a_cards = len(cards)
+    a_wcards = len(wcards)
+    playagain()
     pass
 
 def start():
@@ -239,6 +273,7 @@ def start():
     print ""
     print "Let's play a game of draw poker"
     print ""
+    initialize()
     pick_players()
     game()
 
