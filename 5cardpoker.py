@@ -3,20 +3,23 @@
 #  First attempt at writing a 5 card draw poker game
 
 import random
+import os
 
 cards = ["As", "Ac", "Ah", "Ad","Ks", "Kc", "Kh", "Kd","Qs", "Qc", "Qh", "Qd","Js", "Jc", "Jh", "Jd","10s", "10c", "10h", "10d",
          "9s", "9c", "9h", "9d","8s", "8c", "8h", "8d","7s", "7c", "7h", "7d","6s", "6c", "6h", "6d","5s", "5c", "5h", "5d","4s",
          "4c", "4h", "4d","3s", "3c", "3h", "3d","2s", "2c", "2h", "2d"]
 wcards = []
-hands = ["high card", "pair", "two pair", "three of a kind", "strait", "flush", "full house", "four of a kind", "strait flush", "royal flush"]
+hands = {1: "High Card", 2: "One Pair", 3: "Two Pair", 4: "Three of a Kind", 5: "Strait", 6: "Flush", 7: "Full House",
+         8: "Four of a Kind", 9: "Strait Flush", 10: "*** Royal Flush  ***"}
 facecard = {"A": 14, "K": 13, "Q": 12, "J": 11}
-cardface = {14: "A", 13: "K", 12: "Q", 11: "J"}
+cardface = {14: "Ace", 13: "King", 12: "Queen", 11: "Jack"}
 players = []
 player0 = []
 player1 = []
 player2 = []
 player3 = []
 player4 = []
+top = 0
 hand0 = []
 hand1 = []
 hand2 = []
@@ -24,7 +27,13 @@ hand3 = []
 hand4 = []
 
 def initialize():
-    del wcards[:]    
+    os.system('cls')
+    print ""
+    print ""
+    print "Let's play a game of draw poker"
+    print ""
+    global wcards, player0, player1, player2, player3, player4, hand0, hand1, hand2, hand3, hand4
+    del wcards[:]
     del player0[:]
     del player1[:]
     del player2[:]
@@ -36,7 +45,24 @@ def initialize():
     del hand3[:]
     del hand4[:]
 
+def ck_card(face, direction):
+    if direction == 'decode':
+        if face in ("A","K","Q","J"):
+            x = facecard[face]
+        else:
+            x = int(face)
+    else:
+        if face in ("spades", "hearts", "diamonds", "clubs"):
+            x = face         
+        elif face > 10:
+            x = cardface[face]           
+        else:
+            x = str(face)
+
+    return x
+
 def player_name(x):
+    global players
     player = raw_input("What is player %s's name? " % str(x+1) )
     players.append(player)
 
@@ -47,11 +73,13 @@ def pick_players():
         start()
     numPlayers = int(strPlayers)
     print
-    if numPlayers in (2, 3, 4, 5):
-        for x in range(0,numPlayers):
-            player_name(x)
-            print "Player %s added" % players[x]
-    else:
+    try:
+        if numPlayers in (2, 3, 4, 5):
+            for x in range(0,numPlayers):
+                player_name(x)
+                print "Player %s added" % players[x]
+                print
+    except ValueError:
         print "You must choose 2 to 5 players to play draw poker"
         print "Please try again"
         start()
@@ -67,7 +95,7 @@ def playagain():
         else:
             start()
     else:
-        pass
+        quit()
 
 
 def ranks(hand):
@@ -84,24 +112,16 @@ def ranks(hand):
     pair2 = 0
     likecards = 1
     numPair = []
+    outcome = []
     
-##-------------- Uncomment for testing ---------------    
-    test = ["As","Ac","Ad","Ah","Jd"]
-    for x in test:
-##----------------------------------------------------        
-##    for x in hand:
+    for x in hand:
         card = x
         if len(card) == 3:
-            cardN = card[0:2]
+            cardN = ck_card(card[0:2], 'decode')
             cardT = card[2]
         else:
-            cardN = card[0]
+            cardN = ck_card(card[0], 'decode')
             cardT = card[1]
-
-        if cardN in ("A", "K", "Q", "J"):
-            cardN = facecard[cardN]
-        else:
-            cardN = int(cardN)
 
         count += cardN
             
@@ -137,83 +157,116 @@ def ranks(hand):
             strait = 0
         else:
             strait += 1
-                   
 
-        if numPair[r+1] == numPair[r]:
-            likecards += 1
-            if pair1 == 0:
-                pair1 = numPair[r]
-                likecards = 1
-            elif numPair[r+1] == pair1:
-                three = numPair[r]
-            else:
-                pair2 = numPair[r]
-                likecards = 1
-
-        if numPair[r] == numPair[r-1] and numPair[r] == numPair[r-2]:
+        likecards = numPair.count(numPair[r])
+        if likecards == 4:
+            pair1 = numPair[r]
+            break
+        if likecards == 3:
             three = numPair[r]
-
-        if r == 3 and pair1 > 0 and pair2 > 0:
-            if numPair[4] == pair1 or numPair[4] == pair2:
-                if three == 0:
-                    three = numPair[4]
-                likecards = 5
+        if likecards == 2:
+            if three > 0:
+                pair2 = numPair[r]
+            elif pair1 > 0:
+                pair2 = numPair[r]
+            else:
+                pair1 = numPair[r]
                 
     if strait == 4:
         if numPair[4] - numPair[3] == 1:
             strait += 1
         
-    for a in range(0,5):
-        if numPair[a] > 10:
-            numPair[a] = cardface[numPair[a]]
-        else:
-            numPair[a] = str(numPair[a])
-
-    if pair1 > 10:
-        pair1 = cardface[pair1]
-    elif pair1 != 0:
-        pair1 = str(pair1)
-        
-    if pair2 > 10:
-        pair2 = cardface[pair2]
-    else:
-        pair2 = str(pair2)
-
-    if three > 10:
-        three = cardface[three]
-    else:
-        three = str(three)
-            
-
     if flush == 1 and strait == 5 and count == 60:
-        outcome = '*** Royal Flush  ***({})'.format(suit)
+        outcome.append(10)
+        outcome.append(suit)
     elif flush == 1 and strait == 5:
-        outcome = 'Strait Flush to the {}'.format(numPair[4])
-    elif pair1 == pair2:
-        outcome = 'Four of a kind ({}\'s)'.format(pair1)
-    elif likecards == 5:
+        outcome.append(9)
+        outcome.append(suit)
+        outcome.append(numPair[4])
+    elif likecards == 4:
+        outcome.append(8)
+        outcome.append(pair1)
+    elif three != 0 and (pair1 != 0 or pair2 != 0):
+        outcome.append(7)
+        outcome.append(three)
         if three == pair1:
-            outcome = 'Full House ({}\'s full of {}\'s)'.format(pair2, three)
+            outcome.append(pair2)
         else:
-            outcome = 'Full House ({}\'s full of {}\'s)'.format(pair1, three)
+            outcome.append(pair1)
     elif flush == 1:
-        outcome = 'Flush ({})'.format(suit)
+        outcome.append(6)
+        outcome.append(suit)
+        outcome.append(numPair[4])
     elif strait == 5:
-        outcome = 'Strait to the {}'.format(numPair[4])
-    elif three != '0':
-        outcome = 'Three of a kind ({}\'s)'.format(three)
-    elif pair1 != '0' and pair2 != '0' and pair1 != pair2:
-        outcome = 'Two pair ({}\'s and {}\'s)'.format(pair1, pair2)
-    elif pair1 != '0':
-        outcome = 'One pair ({}\'s)'.format(pair1)
+        outcome.append(5)
+        outcome.append(numPair[4])
+    elif three != 0:
+        outcome.append(4)
+        outcome.append(three)
+    elif pair1 != 0 and pair2 != 0 and pair1 != pair2:
+        outcome.append(3)
+        if pair1 > pair2:
+            outcome.append(pair1)
+            outcome.append(pair2)
+        else:
+            outcome.append(pair2)
+            outcome.append(pair1)
+    elif pair1 != 0:
+        outcome.append(2)
+        outcome.append(pair1)
+        if numPair[4] == pair1:
+            outcome.append(numPair[2])
+        else:
+            outcome.append(numPair[4])
     elif pair1 == 0:
-        outcome = 'High Card ({})' .format(numPair[4])
+        outcome.append(1)
+        outcome.append(numPair[4])
+        outcome.append(numPair[3])
+        outcome.append(numPair[2])
+        outcome.append(numPair[1])
+        outcome.append(numPair[0])
     else:
         outcome = 'An Error has occurred'
 
     return outcome
 
+def findExtra(hand):
+    s = []
+    s = hand
+    rank = s[0]
+    
+    if rank == 1:
+        p1 = ck_card(s[1], 'encode')
+        p1 += ' High with '
+        p1 += ck_card(s[2], 'encode')
+        p1 += ', ' + ck_card(s[3], 'encode')
+        p1 += ', ' + ck_card(s[4], 'encode')
+        p1 += ', ' + ck_card(s[5], 'encode')
+    elif rank == 2:
+        if s[2] == 8 or s[2] == 14:
+            p1 = ck_card(s[1], 'encode') + '\'s with an ' + ck_card(s[2], 'encode')
+        else:
+            p1 = ck_card(s[1], 'encode') + '\'s with a ' + ck_card(s[2], 'encode')
+    elif rank == 3:
+        p1 = ck_card(s[1], 'encode') + '\'s and ' + ck_card(s[2], 'encode') +  '\'s'
+    elif  rank == 4:
+        p1 = ck_card(s[1], 'encode') + '\'s '
+    elif rank == 5:
+        p1 = ' to the ' + ck_card(s[1], 'encode')
+    elif rank == 6 or rank == 9:
+        p1 ='in ' + s[1] +' to the ' + ck_card(s[2], 'encode')
+    elif rank == 7:
+        p1 = ck_card(s[1], 'encode') + ' Full of ' + ck_card(s[2], 'encode') + '\'s'
+    elif rank == 8:
+        p1 = ck_card(s[1], 'encode') +' \'s'
+    elif rank == 10:
+        p1 = ' in' + s[1]
+    
+    return p1
+    
+
 def game():
+    global wcards, player0, player1, player2, player3, player4, hand0, hand1, hand2, hand3, hand4
     n = len(players)
     wcards = cards[:]
     for x in range(0,5):
@@ -235,46 +288,130 @@ def game():
         elif n == 2:
             player0.append(wcards.pop(random.randint(0, len(wcards) - 1)))
             player1.append(wcards.pop(random.randint(0, len(wcards) - 1)))
-        
+##    player0 = ["4d", "Qc", "Ac", "9d", "Jh"]
+##    player1 = ["2c", "Js", "3s", "6d", "Qs"]
+##    player2 = ["As", "8s", "5h", "4c", "Kc"]
+##    player4 = ["7d", "9s", "4s", "10s", "3c"]
+##    player3 = ["10d", "Qd", "2h", "7c", "5c"]
+
     hand0 = ranks(player0)
     myHand = player0[0] + " " + player0[1] + " " + player0[2] + " " + player0[3] + " " + player0[4]
     print "%s\'s hand is:" % (players[0])
-    print "       " + (myHand) + ",  " + (hand0)
-
+    print "       " + (myHand) + ",  " + hands[hand0[0]] + '( ' + ck_card(hand0[1],'encode') + ' )'
+    
     hand1 = ranks(player1)
     myHand = player1[0] + " " + player1[1] + " " + player1[2] + " " + player1[3] + " " + player1[4]
     print "%s\'s hand is:" % (players[1])
-    print "       " + (myHand) + ",  " + (hand1)
-    
-    if len(player2) > 0:
+    print "       " + (myHand) + ",  " + hands[hand1[0]] + '( ' + ck_card(hand1[1],'encode') + ' )'
+        
+    if n > 2:
         hand2 = ranks(player2)
         myHand = player2[0] + " " + player2[1] + " " + player2[2] + " " + player2[3] + " " + player2[4]
         print "%s\'s hand is:" % (players[2])
-        print "       " + (myHand) + ",  " + (hand2)
-        
-    if len(player3) > 0:
+        print "       " + (myHand) + ",  " + hands[hand2[0]] + '( ' + ck_card(hand2[1],'encode') + ' )'
+    
+    if n > 3:
         hand3 = ranks(player3)
         myHand = player3[0] + " " + player3[1] + " " + player3[2] + " " + player3[3] + " " + player3[4]
         print "%s\'s hand is:" % (players[3])
-        print "       " + (myHand) + ",  " + (hand3)
-        
-    if len(player4) > 0:
+        print "       " + (myHand) + ",  " + hands[hand3[0]] + '( ' + ck_card(hand3[1],'encode') + ' )'
+    
+    if n > 4:
         hand4 = ranks(player4)
         myHand = player4[0] + " " + player4[1] + " " + player4[2] + " " + player4[3] + " " + player4[4]
         print "%s\'s hand is:" % (players[4])
-        print "       " + (myHand) + ",  " + (hand4)
-    a_cards = len(cards)
-    a_wcards = len(wcards)
+        print "       " + (myHand) + ",  " + hands[hand4[0]] + '( ' + ck_card(hand4[1],'encode') + ' )'
+
+    if n == 5:
+        playerRanks = [hand0[0], hand1[0], hand2[0], hand3[0], hand4[0]]
+    elif n == 4:
+        playerRanks = [hand0[0], hand1[0], hand2[0], hand3[0]]
+    elif n == 3:
+        playerRanks = [hand0[0], hand1[0], hand2[0]]
+    elif n == 2:
+        playerRanks = [hand0[0], hand1[0]]
+        
+    tempRanks = max(playerRanks)
+    count = playerRanks.count(tempRanks)
+    if count > 1:
+        s = []
+        for w in range(0, len(playerRanks)):
+            if playerRanks[w] == tempRanks:
+                s.append(w)
+        if tempRanks == 10:
+            winner = 'we have a tie! ' + count + ' players have a Royal Flush. There must be some cheating going on here!'
+        if tempRanks in (6,7,9):
+            t = win_tie(s, 2)
+        if tempRanks in (3,4,5,8):
+            t = win_tie(s, 1)
+        if tempRanks in (1,2):
+            t = win_tie(s,1)
+            count = t.count(max(t))
+            if count > 1:
+                u = t
+                t = win_tie(s,2)
+                l = len(u)
+                for x in range(0, l):
+                    if u[x] == max(u):
+                        t[x] = max(u)+t[x]+100
+                    
+##        if tempRanks == 1:
+##            t = win_tie(s,1)
+            
+        x = 0
+        l = len(t)
+        top = t[0]
+        z = []
+        for x in range(0,l-1):
+            if top < t[x+1]:
+                top = t[x+1]
+        y = t.index(top)
+        y = s[y]
+    else:
+        y = playerRanks.index(tempRanks)
+    
+    if y == 0:
+        z = hand0
+    elif y == 1:
+        z = hand1
+    elif y == 2:
+        z = hand2
+    elif y == 3:
+        z = hand3
+    elif y == 4:
+        z = hand4
+        
+    winner = 'winner is ' + players[y] + ' with ' + hands[tempRanks] + ' ( ' + findExtra(z) + ' )'
+    print
+    print winner
     playagain()
     pass
 
+def win_tie(s, x):
+    count = 0
+    b = []
+    while count < len(s):
+        if s[count] == 0:
+            a = hand0[x]
+        if s[count] == 1:
+            a = hand1[x]
+        if s[count] == 2:
+            a = hand2[x]
+        if s[count] == 3:
+            a = hand3[x]
+        if s[count] == 4:
+            a = hand4[x]
+        b.append(a)
+        count += 1
+    return b
+
 def start():
-    print ""
-    print ""
-    print "Let's play a game of draw poker"
-    print ""
     initialize()
     pick_players()
+##    players.append('Scott')
+##    players.append('Steve')
+##    players.append('Looser')
+##    numPlayers = 3
     game()
 
 
