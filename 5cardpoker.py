@@ -2,34 +2,37 @@
 
 #  First attempt at writing a 5 card draw poker game
 
-import random
 import os
+import random
 import time
 from poker_dict import *
 
+#global variables
 wcards = []
 players = []
 player0 = []
+hand0 = []
 player0_score = 0
 player0_hands = 0
 player1 = []
+hand1 = []
 player1_score = 0
 player1_hands = 0
 player2 = []
+hand2 = []
 player2_score = 0
 player2_hands = 0
 player3 = []
+hand3 = []
 player3_score = 0
 player3_hands = 0
 player4 = []
+hand4 = []
 player4_score = 0
 player4_hands = 0
-hand0 = []
-hand1 = []
-hand2 = []
-hand3 = []
-hand4 = []
 
+
+## These are set back to null just in case the player chooses to play again.  
 def initialize():
     os.system('cls')
     print
@@ -49,6 +52,56 @@ def initialize():
     del hand3[:]
     del hand4[:]
 
+##    Here we ask for the player's name and how many opponents they want
+def pick_players():
+    global players
+    if len(players) > 0:
+        del players[:]
+    player = raw_input(" What is your name? ")
+    players.append(player)
+    
+    strPlayers = raw_input(" How many computer players (up to four)? ")
+    if strPlayers in ('1','2','3','4'):
+        numPlayers = int(strPlayers)
+    else:
+        print " %s is an invalid entry, please try again" % strPlayers
+        start()
+    print
+
+##    Here we assign computer opponent names from the list called compNames imported from poker_dict.py
+    for x in range(0,numPlayers):
+        players.append(compNames[random.randint(0, len(compNames) - 1)])
+        print " Computer player %s added" % players[x+1]
+        print
+        time.sleep(1)
+		
+    print " Shuffling..."
+    time.sleep(3)
+	
+
+## The user is given the option to play again from the begining or using the same players
+def playagain():
+    print
+    replay = raw_input("Do you want to play again Y/N? ")
+    if replay in ("Y", "y", "YES", "Yes", "yes"):
+        sameplayers = raw_input("Same Players Y/N? ")
+        if sameplayers in ("Y", "y", "YES", "Yes", "yes"):
+            initialize()
+            return replay
+        else:
+            scores()
+            print
+            print " You are changing players, here are the scores for this session"
+            print " Display of scores. We will continue in 10 seconds"
+            time.sleep(10)
+            start()
+    else:
+        pass
+    
+
+## This routine will change the face of the card to an integer or face value from an integer
+## in the case of a flush we must provide a provision to retrun the same value, as we don't know
+## what the final outcome will be in the printed value.
 def ck_card(face, direction):
     if direction == 'decode':
         if face in ("A","K","Q","J"):
@@ -65,78 +118,48 @@ def ck_card(face, direction):
 
     return x
 
-def pick_players():
-##    Here we ask for the player's name and how many opponents they want
-    global players
-    player = raw_input(" What is your name? ")
-    players.append(player)
-    
-    strPlayers = raw_input(" How many computer players (up to four)? ")
-    if strPlayers in ('1','2','3','4'):
-        numPlayers = int(strPlayers)
-    else:
-        print " %s is an invalid entry, please try again" % strPlayers
-        start()
-    print
-##    Here we assign computer opponent names from the list called compNames
-    for x in range(0,numPlayers):
-        players.append(compNames[random.randint(0, len(compNames) - 1)])
-        print " Computer player %s added" % players[x+1]
-        print
-        time.sleep(1)
-		
-    print " Shuffling..."
-    time.sleep(3)
-	
-
-def playagain():
-    print
-    replay = raw_input("Do you want to play again Y/N? ")
-    if replay in ("Y", "y", "YES", "Yes", "yes"):
-        sameplayers = raw_input("Same Players Y/N? ")
-        if sameplayers in ("Y", "y", "YES", "Yes", "yes"):
-            initialize()
-            return replay
-        else:
-            start()
-    else:
-        pass
-
-def replace_cards(myHand):
+## This routine is used to replace cards in the HUMAN player's hand. You can replace up to 5 cards  
+def replace_cards(myHand):  
     global player0
     v = []
     x = 0
     a = 0
+    t = 0
     print " You may replace up to 5 cards. Enter the number of the cards to replace one at a time "
-    for x in range(0,5):
-        if x == 0:
+    ## This range is needed in case the user picks the wrong card one or more times (x cannot be manipulated after the FOR
+    ## therefore t is used to count the number of cards removed.)
+    for x in range(0,12):
+        if t == 0:
             a = '1st'
-        elif x == 1:
+        elif t == 1:
             a = '2nd'
-        elif x == 2:
+        elif t == 2:
             a = '3rd'
-        elif x == 3:
+        elif t == 3:
             a = '4th'
-        elif x == 4:
+        elif t == 4:
             a = '5th'
         replaceCard = raw_input(" %s card to replace ( press enter with no card when done ) " % a)
-        if replaceCard == '':
+        if replaceCard == '':   ## This ends the selection of cards
             break
-        if replaceCard in ('1','2','3','4','5') and replaceCard not in v:
-            v.append(replaceCard)
+        if replaceCard in ('1','2','3','4','5') and replaceCard not in v:  ## Checks if the card is between 1-5 and if it has already been selected.
+            v.append(replaceCard) ## adds the selected card to the "v" list
+            t += 1 ## incremented to select the next card
         elif replaceCard in v:
             print " You already chose that card (" + player0[int(replaceCard)-1] + ")"
         else:    
             print " You entered an invalid card number"
             print " Please try again"
-            del v[:]
-            replace_cards(myHand)
+
+        if t == 5:
+            break
                 
     if len(v) > 0:
         for x in range(0,len(v)):
-            b = int(v[x]) - 1
-            player0[b] = wcards.pop(random.randint(0, len(wcards) - 1))
-            
+            b = int(v[x]) - 1  ## Will corespond with the selected card in the player0 list
+            player0[b] = wcards.pop(random.randint(0, len(wcards) - 1))  ## Selects a new random card from wcards and assings it to the player0 list
+
+## Used to break ties in winning hands by selecting cards to to compare in the calling routine.            
 def win_tie(s, x):
     count = 0
     b = []
@@ -155,6 +178,7 @@ def win_tie(s, x):
         count += 1
     return b
 
+# This routine will return the outcome of a hand in an ordered list. [0] = the rank 1-10, [1] = highest card, pair, or suit, [2] = other pertaining information.
 def ranks(hand):
     count = 0
     numRange = 0
@@ -193,6 +217,7 @@ def ranks(hand):
         elif cardT == 'd':
             diamonds += 1
 
+## Five of the same suit is a flush
         if spades == 5:
             flush = 1
             suit = 'spades'
@@ -209,73 +234,56 @@ def ranks(hand):
             flush = 0
             
     numPair.sort()
+## Five cards in a row is a strait.
     for r in xrange(0, len(numPair)-1):
         if numPair[r+1] - numPair[r] != 1:
             strait = 0
         else:
             strait += 1
-
+    
+## Here we look for pairs, three of a kind and four of a kind (quads) and full houses
         likecards = numPair.count(numPair[r])
         if likecards == 4:
             pair1 = numPair[r]
             break
         if likecards == 3:
-            three = numPair[r]
         if likecards == 2:
-            if three > 0:
                 pair2 = numPair[r]
             elif pair1 > 0:
-                pair2 = numPair[r]
             else:
-                pair1 = numPair[r]
                 
-    if strait == 4:
         if numPair[4] - numPair[3] == 1:
-            strait += 1
-        
-    if flush == 1 and strait == 5 and count == 60:
-        outcome.append(10)
         outcome.append(suit)
-    elif flush == 1 and strait == 5:
         outcome.append(9)
         outcome.append(suit)
         outcome.append(numPair[4])
-    elif likecards == 4:
         outcome.append(8)
         outcome.append(pair1)
-    elif three != 0 and (pair1 != 0 or pair2 != 0):
         outcome.append(7)
         outcome.append(three)
-        if three == pair1:
             outcome.append(pair2)
         else:
             outcome.append(pair1)
-    elif flush == 1:
         outcome.append(6)
         outcome.append(suit)
         outcome.append(numPair[4])
-    elif strait == 5:
         outcome.append(5)
         outcome.append(numPair[4])
-    elif three != 0:
         outcome.append(4)
         outcome.append(three)
     elif pair1 != 0 and pair2 != 0 and pair1 != pair2:
-        outcome.append(3)
         if pair1 > pair2:
             outcome.append(pair1)
             outcome.append(pair2)
         else:
             outcome.append(pair2)
             outcome.append(pair1)
-    elif pair1 != 0:
         outcome.append(2)
         outcome.append(pair1)
         if numPair[4] == pair1:
             outcome.append(numPair[2])
         else:
             outcome.append(numPair[4])
-    elif pair1 == 0:
         outcome.append(1)
         outcome.append(numPair[4])
         outcome.append(numPair[3])
@@ -321,19 +329,15 @@ def findExtra(hand):
     
     return p1
     
-
 def game():
     global wcards, player0, player1, player2, player3, player4
     global hand0, hand1, hand2, hand3, hand4
     global player0_hands, player1_hands, player2_hands, player3_hands, player4_hands
     global player0_score, player1_score, player2_score, player3_score, player4_score
-    n = len(players)
-    wcards = cards[:]
     os.system('cls')
     print " " + players[0] + "'s hand:"
     for x in range(0,5):
         player0.append(wcards.pop(random.randint(0, len(wcards) - 1)))
-        print ' ' + cardsGraph[player0[x]] + ' ' + str(x+1)
         time.sleep(0.5)
         player1.append(wcards.pop(random.randint(0, len(wcards) - 1)))
         if n > 2:
@@ -342,62 +346,42 @@ def game():
             player3.append(wcards.pop(random.randint(0, len(wcards) - 1)))
         if n > 4:
             player4.append(wcards.pop(random.randint(0, len(wcards) - 1)))
-##    player0 = ["4d", "Qc", "Ac", "9d", "Jh"]
-##    player1 = ["2c", "Js", "3s", "6d", "Qs"]
-##    player2 = ["As", "8s", "5h", "4c", "Kc"]
-##    player4 = ["7d", "9s", "4s", "10s", "3c"]
-##    player3 = ["10d", "Qd", "2h", "7c", "5c"]
 
     myHand = player0[0] + " " + player0[1] + " " + player0[2] + " " + player0[3] + " " + player0[4]
-    replace = raw_input("Would you like to draw/replace any cards %s Y/N? " % myHand)
     if replace in ("Y", "y", "YES", "Yes", "yes"):
         replace_cards(myHand)
         myHand = player0[0] + " " + player0[1] + " " + player0[2] + " " + player0[3] + " " + player0[4]
         os.system('cls')
         print " " + players[0] + "'s hand:"
         for x in range(0,5):
-            print ' ' + cardsGraph[player0[x]] + ' ' + str(x+1)
             time.sleep(0.5)
     elif replace in ("N", "n", "NO", "No", "no"):
         pass
-    else:
         print " Your answer was not appropriate. You answered " + replace + ". Moving on!"
         print
             
-    hand0 = ranks(player0)
-    player0_hands += 1
     print " %s\'s hand is:" % (players[0])
-    print "       " + (myHand) + ",  " + hands[hand0[0]] + '( ' + ck_card(hand0[1],'encode') + ' )'
     
-    hand1 = ranks(player1)
     player1_hands += 1
     myHand = player1[0] + " " + player1[1] + " " + player1[2] + " " + player1[3] + " " + player1[4]
     print " %s\'s hand is:" % (players[1])
-    print "       " + (myHand) + ",  " + hands[hand1[0]] + '( ' + ck_card(hand1[1],'encode') + ' )'
         
     if n > 2:
-        hand2 = ranks(player2)
         player2_hands += 1
         myHand = player2[0] + " " + player2[1] + " " + player2[2] + " " + player2[3] + " " + player2[4]
         print " %s\'s hand is:" % (players[2])
-        print "       " + (myHand) + ",  " + hands[hand2[0]] + '( ' + ck_card(hand2[1],'encode') + ' )'
     
     if n > 3:
-        hand3 = ranks(player3)
         player3_hands += 1
         myHand = player3[0] + " " + player3[1] + " " + player3[2] + " " + player3[3] + " " + player3[4]
         print " %s\'s hand is:" % (players[3])
-        print "       " + (myHand) + ",  " + hands[hand3[0]] + '( ' + ck_card(hand3[1],'encode') + ' )'
     
     if n > 4:
-        hand4 = ranks(player4)
         player4_hands += 1
         myHand = player4[0] + " " + player4[1] + " " + player4[2] + " " + player4[3] + " " + player4[4]
         print " %s\'s hand is:" % (players[4])
-        print "       " + (myHand) + ",  " + hands[hand4[0]] + '( ' + ck_card(hand4[1],'encode') + ' )'
 
     if n == 5:
-        playerRanks = [hand0[0], hand1[0], hand2[0], hand3[0], hand4[0]]
     elif n == 4:
         playerRanks = [hand0[0], hand1[0], hand2[0], hand3[0]]
     elif n == 3:
@@ -405,15 +389,10 @@ def game():
     elif n == 2:
         playerRanks = [hand0[0], hand1[0]]
         
-    tempRanks = max(playerRanks)
-    count = playerRanks.count(tempRanks)
     if count > 1:
         s = []
-        for w in range(0, len(playerRanks)):
             if playerRanks[w] == tempRanks:
                 s.append(w)
-        if tempRanks == 10:
-            winner = 'we have a tie! ' + count + ' players have a Royal Flush. There must be some cheating going on here!'
             if 0 in s:
                 player0_score += 1
             if 1 in s:
@@ -424,35 +403,21 @@ def game():
                 player3_score += 1
             if 3 in s:
                 player4_score += 1
-        if tempRanks in (6,7,9):
-            t = win_tie(s, 2)
-        if tempRanks in (3,4,5,8):
-            t = win_tie(s, 1)
-        if tempRanks in (1,2):
-            t = win_tie(s,1)
             count = t.count(max(t))
             if count > 1:
                 u = t
-                t = win_tie(s,2)
                 l = len(u)
                 for x in range(0, l):
                     if u[x] == max(u):
-                        t[x] = max(u)+t[x]+100
             
         x = 0
         l = len(t)
-        top = t[0]
         z = []
-        for x in range(0,l-1):
             if top < t[x+1]:
                 top = t[x+1]
-        y = t.index(top)
-        y = s[y]
     else:
-        y = playerRanks.index(tempRanks)
     
     if y == 0:
-        z = hand0
         player0_score += 1
     elif y == 1:
         z = hand1
@@ -467,7 +432,6 @@ def game():
         z = hand4
         player4_score += 1
         
-    winner = 'winner is ' + players[y] + ' with ' + hands[tempRanks] + ' ( ' + findExtra(z) + ' )'
     print
     print winner
     return playagain()
@@ -477,11 +441,6 @@ def game():
 def start():
     initialize()
     pick_players()
-##    players.append('Scott')
-##    players.append('Steve')
-##    players.append('Looser')
-##    numPlayers = 3
-    while game():
         pass
     scores()
 
